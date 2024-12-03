@@ -1480,7 +1480,10 @@ private[spark] class DAGScheduler(
     // The operation here can make sure for the partially completed intermediate stage,
     // `findMissingPartitions()` returns all partitions every time.
     stage match {
-      case sms: ShuffleMapStage if stage.isIndeterminate && !sms.isAvailable =>
+      case sms: ShuffleMapStage if (stage.isIndeterminate && !sms.isAvailable) ||
+        mapOutputTracker.skewShuffleIds.contains(sms.shuffleDep.shuffleId) =>
+        logInfo(s"Unregistering shuffle output for stage ${stage.id}" +
+          s" shuffle ${sms.shuffleDep.shuffleId}")
         mapOutputTracker.unregisterAllMapAndMergeOutput(sms.shuffleDep.shuffleId)
         sms.shuffleDep.newShuffleMergeState()
       case _ =>
@@ -1962,7 +1965,7 @@ private[spark] class DAGScheduler(
 
           val shouldAbortStage =
             failedStage.failedAttemptIds.size >= maxConsecutiveStageAttempts ||
-            disallowStageRetryForTest
+            disallowStageRetryForTest || mapOutputTracker.skewShuffleIds.contains(shuffleId)
 
           // It is likely that we receive multiple FetchFailed for a single stage (because we have
           // multiple tasks running concurrently on different executors). In that case, it is

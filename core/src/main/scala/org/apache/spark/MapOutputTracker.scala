@@ -726,6 +726,8 @@ private[spark] class MapOutputTrackerMaster(
 
   private val availableProcessors = Runtime.getRuntime.availableProcessors()
 
+  val skewShuffleIds = ConcurrentHashMap.newKeySet[Int]()
+
   // Make sure that we aren't going to exceed the max RPC message size by making sure
   // we use broadcast to send large map output statuses.
   if (minSizeForBroadcast > maxRpcMessageSize) {
@@ -916,6 +918,7 @@ private[spark] class MapOutputTrackerMaster(
         shuffleStatus.invalidateSerializedMergeOutputStatusCache()
       }
     }
+    skewShuffleIds.remove(shuffleId)
   }
 
   /**

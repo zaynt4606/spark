@@ -4423,6 +4423,19 @@ object SQLConf {
       .booleanConf
       .createWithDefault(false)
 
+  val CELEBORN_CLIENT_ADAPTIVE_OPTIMIZE_SKEWED_PARTITION_READ =
+    buildConf("spark.celeborn.client.adaptive.optimizeSkewedPartitionRead.enabled")
+      .version("3.0.0")
+      .booleanConf
+      .createWithDefault(false)
+
+  val CELEBORN_STAGE_RERUN_ENABLED =
+    buildConf("spark.celeborn.client.spark.stageRerun.enabled")
+      .withAlternative("spark.celeborn.client.spark.fetch.throwsFetchFailure")
+      .version("3.0.0")
+      .booleanConf
+      .createWithDefault(false)
+
   /**
    * Holds information about keys that have been deprecated.
    *
@@ -5277,6 +5290,11 @@ class SQLConf extends Serializable with Logging with SqlApiConf {
   def legacyNegativeIndexInArrayInsert: Boolean = {
     getConf(SQLConf.LEGACY_NEGATIVE_INDEX_IN_ARRAY_INSERT)
   }
+
+  def celebornClientAdaptiveOptimizeSkewedPartitionReadEnabled: Boolean =
+    getConf(SQLConf.CELEBORN_CLIENT_ADAPTIVE_OPTIMIZE_SKEWED_PARTITION_READ)
+
+  def celebornStageRerunEnabled: Boolean = getConf(SQLConf.CELEBORN_STAGE_RERUN_ENABLED)
 
   /** ********************** SQLConf functionality methods ************ */
 
