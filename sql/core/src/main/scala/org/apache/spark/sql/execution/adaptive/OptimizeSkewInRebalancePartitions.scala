@@ -47,14 +47,15 @@ object OptimizeSkewInRebalancePartitions extends AQEShuffleReadRule {
   private def optimizeSkewedPartitions(
       shuffleId: Int,
       bytesByPartitionId: Array[Long],
-      targetSize: Long): Seq[ShufflePartitionSpec] = {
+      targetSize: Long,
+      isCelebornShuffle: Boolean = false): Seq[ShufflePartitionSpec] = {
     val smallPartitionFactor =
       conf.getConf(SQLConf.ADAPTIVE_REBALANCE_PARTITIONS_SMALL_PARTITION_FACTOR)
     bytesByPartitionId.indices.flatMap { reduceIndex =>
       val bytes = bytesByPartitionId(reduceIndex)
       if (bytes > targetSize) {
         val newPartitionSpec = ShufflePartitionsUtil.createSkewPartitionSpecs(
-          shuffleId, reduceIndex, targetSize, smallPartitionFactor)
+          shuffleId, reduceIndex, targetSize, smallPartitionFactor, isCelebornShuffle)
         if (newPartitionSpec.isEmpty) {
           CoalescedPartitionSpec(reduceIndex, reduceIndex + 1, bytes) :: Nil
         } else {
@@ -77,8 +78,9 @@ object OptimizeSkewInRebalancePartitions extends AQEShuffleReadRule {
       return shuffle
     }
 
+    val isCelebornShuffle = CelebornShuffleUtil.isCelebornShuffle(shuffle.shuffle)
     val newPartitionsSpec = optimizeSkewedPartitions(
-      mapStats.get.shuffleId, mapStats.get.bytesByPartitionId, advisorySize)
+      mapStats.get.shuffleId, mapStats.get.bytesByPartitionId, advisorySize, isCelebornShuffle)
     // return origin plan if we can not optimize partitions
     if (newPartitionsSpec.length == mapStats.get.bytesByPartitionId.length) {
       shuffle
