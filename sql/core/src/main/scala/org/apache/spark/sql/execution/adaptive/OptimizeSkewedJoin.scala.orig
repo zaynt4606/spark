@@ -151,10 +151,8 @@ case class OptimizeSkewedJoin(ensureRequirements: EnsureRequirements)
         Seq(CoalescedPartitionSpec(partitionIndex, partitionIndex + 1, rightSize))
 
       val leftParts = if (isLeftSkew) {
-        val isCelebornShuffle = CelebornShuffleUtil.isCelebornShuffle(left.shuffle)
         val skewSpecs = ShufflePartitionsUtil.createSkewPartitionSpecs(
-          left.mapStats.get.shuffleId, partitionIndex, leftTargetSize,
-          isCelebornShuffle = isCelebornShuffle)
+          left.mapStats.get.shuffleId, partitionIndex, leftTargetSize)
         if (skewSpecs.isDefined) {
           logDebug(s"Left side partition $partitionIndex " +
             s"(${Utils.bytesToString(leftSize)}) is skewed, " +
@@ -167,10 +165,8 @@ case class OptimizeSkewedJoin(ensureRequirements: EnsureRequirements)
       }
 
       val rightParts = if (isRightSkew) {
-        val isCelebornShuffle = CelebornShuffleUtil.isCelebornShuffle(right.shuffle)
         val skewSpecs = ShufflePartitionsUtil.createSkewPartitionSpecs(
-          right.mapStats.get.shuffleId, partitionIndex, rightTargetSize,
-          isCelebornShuffle = isCelebornShuffle)
+          right.mapStats.get.shuffleId, partitionIndex, rightTargetSize)
         if (skewSpecs.isDefined) {
           logDebug(s"Right side partition $partitionIndex " +
             s"(${Utils.bytesToString(rightSize)}) is skewed, " +
